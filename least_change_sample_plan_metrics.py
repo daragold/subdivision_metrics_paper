@@ -20,6 +20,7 @@ from gerrychain.updaters import cut_edges
 from gerrychain import GeographicPartition
 import networkx as nx
 import itertools
+import maup
 
 #input parameters
 sample_plan_path = 'least_change_sample_plans.csv' 
@@ -80,7 +81,31 @@ def perc_perim_change(partition):
     orig_perim = base_partition["perimeter"]
     new_perim = partition["perimeter"]
     perim_diff = {k: abs(orig_perim[k] - new_perim[k]) for k in new_perim.keys()}
-    return sum(perim_diff.values())/sum(orig_perim.values())
+    return min(1,sum(perim_diff.values())/sum(orig_perim.values()))
+
+def perim_common_refine_change(base_dissolve, new_dissolve):
+    comm_ref = maup.intersections(base_dissolve, new_dissolve, area_cutoff = 0)
+    total_perim_comm_ref = sum([comm_ref[i][j].length for i in range(num_districts) for j in comm_ref[i].index])
+    total_perim_base = sum(base_dissolve.length.to_list() )
+    return 1- (total_perim_base/total_perim_comm_ref)
+
+def perimeter_change(partition, orig_assign_dict, length = True, reference = 'symmetric'):
+    orig_cut_edges = [e for e in partition.graph.edges() if orig_assign_dict[e[0]]!=orig_assign_dict[e[1]]]
+    retained_cut_edges = [e for e in orig_cut_edges if e in partition['cut_edges']]
+    if length:
+        if reference == 'orig':
+            return 1-sum([partition.graph.edges[e]['shared_perim'] for e in retained_cut_edges])/sum([partition.graph.edges[e]['shared_perim'] for e in orig_cut_edges])
+        if reference == 'new':
+            return 1-sum([partition.graph.edges[e]['shared_perim'] for e in retained_cut_edges])/sum([partition.graph.edges[e]['shared_perim'] for e in partition['cut_edges']])
+        if reference == 'symmetric':
+            return ((1-sum([partition.graph.edges[e]['shared_perim'] for e in retained_cut_edges])/sum([partition.graph.edges[e]['shared_perim'] for e in orig_cut_edges])) + (1-sum([partition.graph.edges[e]['shared_perim'] for e in retained_cut_edges])/sum([partition.graph.edges[e]['shared_perim'] for e in partition['cut_edges']])))/2
+    else:
+        if reference == 'orig':
+            return 1-len(retained_cut_edges)/len(orig_cut_edges)
+        if reference == 'new':
+            return 1-len(retained_cut_edges)/len(partition['cut_edges'])
+        if reference == 'symmetric':
+            return ((1-len(retained_cut_edges)/len(orig_cut_edges)) + (1-len(retained_cut_edges)/len(partition['cut_edges'])))/2
 
 def perc_county_change(partition):
     df = state_gdf.copy()
@@ -164,16 +189,18 @@ my_updaters = {
 }
 
 base_partition = GeographicPartition(graph = graph, assignment = base_map, updaters = my_updaters)
+base_dissolve = state_gdf.dissolve(by = enacted).reset_index()
 orig_assign_dict = {node: graph.nodes[node][base_map] for node in graph.nodes}
 counties = np.unique(state_gdf[county_split_id])
 orig_split_counties = [i for i in counties if state_gdf.groupby(county_split_id)[base_map].get_group(i).nunique() >1]
 orig_cut_list = [sorted(i) for i in base_partition["cut_edges"]]
 
 #set up base plan and comparator plan partitions
-results_df = pd.DataFrame(columns = ['Metric'], data = ['Max Pop Dev', 'People Change', 'Area Change', 'Precinct Change', 'Perimeter Change', 'Boundary cut edge Change', 'Precinct pair change', 'County split Change','Incumbent-precinct pair change', 'Incumbent-people pair change', 'Variation of info', 'Fowlkes-Mallows Index' ])
+results_df = pd.DataFrame(columns = ['Metric'], data = ['Max Pop Dev', 'People Change', 'Area Change', 'Precinct Change', 'Perimeter Change', 'Boundary cut edge Change', 'Precinct pair change', 'County split Change','Incumbent-precinct pair change', 'Incumbent-people pair change', 'Variation of info', 'Fowlkes-Mallows Index', 'Perim Common Refinement', 'Perim_symmetric_length', 'Perim_symmetric_cut_edge' ])
 for map_name in sample_plans.columns[1:]:
     compare_partition = GeographicPartition(graph = graph, assignment = map_name, updaters = my_updaters) 
-    results_df[map_name] = [compare_partition["max_pop_dev"], compare_partition["perc_people_change"],compare_partition["perc_area_change"], compare_partition["perc_precinct_change"], compare_partition["perc_perim_change"], compare_partition["perc_cut_edges_change"], compare_partition["perc_precinct_pair_change"],compare_partition["perc_county_change"],compare_partition["perc_incum_precinct_match_change"], compare_partition["perc_incum_people_match_change"], compare_partition["variation_of_info"],compare_partition["FM_index"]]
+    compare_dissolve = state_gdf.dissolve(by = map_name).reset_index()
+    results_df[map_name] = [compare_partition["max_pop_dev"], compare_partition["perc_people_change"],compare_partition["perc_area_change"], compare_partition["perc_precinct_change"], compare_partition["perc_perim_change"], compare_partition["perc_cut_edges_change"], compare_partition["perc_precinct_pair_change"],compare_partition["perc_county_change"],compare_partition["perc_incum_precinct_match_change"], compare_partition["perc_incum_people_match_change"], compare_partition["variation_of_info"],compare_partition["FM_index"],  perim_common_refine_change(base_dissolve, compare_dissolve), perimeter_change(compare_partition, orig_assign_dict, length = True, reference = 'symmetric'), perimeter_change(compare_partition, orig_assign_dict, length = False, reference = 'symmetric')]
 
 results_df.to_csv('least_change_sample_plan_scores.csv', index = False)
 
