@@ -126,7 +126,7 @@ def variation_of_info(partition, total_pop = total_population):
             
     return round((-1/(2*np.log(num_districts)))*VI_unnorm,3)
 
-def fk_index(partition):
+def FM_index(partition):
     all_precinct_pairs = list(itertools.combinations(partition.graph.nodes, 2))
     num_pp = 0
     combo_pairs_orig = 0
@@ -160,7 +160,7 @@ my_updaters = {
     "perc_incum_people_match_change": perc_incum_people_match_change,
     "perc_precinct_pair_change": perc_precinct_pair_change,
     "variation_of_info": variation_of_info,
-    "fk_index": fk_index
+    "FM_index": FM_index
 }
 
 base_partition = GeographicPartition(graph = graph, assignment = base_map, updaters = my_updaters)
@@ -173,7 +173,7 @@ orig_cut_list = [sorted(i) for i in base_partition["cut_edges"]]
 results_df = pd.DataFrame(columns = ['Metric'], data = ['Max Pop Dev', 'People Change', 'Area Change', 'Precinct Change', 'Perimeter Change', 'Boundary cut edge Change', 'Precinct pair change', 'County split Change','Incumbent-precinct pair change', 'Incumbent-people pair change', 'Variation of info', 'Fowlkes-Mallows Index' ])
 for map_name in sample_plans.columns[1:]:
     compare_partition = GeographicPartition(graph = graph, assignment = map_name, updaters = my_updaters) 
-    results_df[map_name] = [compare_partition["max_pop_dev"], compare_partition["perc_people_change"],compare_partition["perc_area_change"], compare_partition["perc_precinct_change"], compare_partition["perc_perim_change"], compare_partition["perc_cut_edges_change"], compare_partition["perc_precinct_pair_change"],compare_partition["perc_county_change"],compare_partition["perc_incum_precinct_match_change"], compare_partition["perc_incum_people_match_change"], compare_partition["variation_of_info"],compare_partition["fk_index"]]
+    results_df[map_name] = [compare_partition["max_pop_dev"], compare_partition["perc_people_change"],compare_partition["perc_area_change"], compare_partition["perc_precinct_change"], compare_partition["perc_perim_change"], compare_partition["perc_cut_edges_change"], compare_partition["perc_precinct_pair_change"],compare_partition["perc_county_change"],compare_partition["perc_incum_precinct_match_change"], compare_partition["perc_incum_people_match_change"], compare_partition["variation_of_info"],compare_partition["FM_index"]]
 
 results_df.to_csv('least_change_sample_plan_scores.csv', index = False)
 
