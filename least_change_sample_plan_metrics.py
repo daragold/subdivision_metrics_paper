@@ -76,12 +76,12 @@ def perc_people_change(partition, total_pop = total_population):
 def perc_area_change(partition):
     changed_area = sum([partition.graph.nodes[k][area] for k in orig_assign_dict.keys() if orig_assign_dict[k] != partition.assignment[k]])
     return changed_area/sum([partition.graph.nodes[k][area] for k in partition.graph.nodes])
-
-def perc_perim_change(partition):
-    orig_perim = base_partition["perimeter"]
-    new_perim = partition["perimeter"]
-    perim_diff = {k: abs(orig_perim[k] - new_perim[k]) for k in new_perim.keys()}
-    return min(1,sum(perim_diff.values())/sum(orig_perim.values()))
+#
+#def perc_perim_change(partition):
+#    orig_perim = base_partition["perimeter"]
+#    new_perim = partition["perimeter"]
+#    perim_diff = {k: abs(orig_perim[k] - new_perim[k]) for k in new_perim.keys()}
+#    return min(1,sum(perim_diff.values())/sum(orig_perim.values()))
 
 def perim_common_refine_change(base_dissolve, new_dissolve):
     comm_ref = maup.intersections(base_dissolve, new_dissolve, area_cutoff = 0)
@@ -178,9 +178,8 @@ my_updaters = {
     "perc_area_change": perc_area_change,
     "perc_precinct_change": perc_precinct_change,
     "perc_cut_edges_change": perc_cut_edges_change,
-    "perc_perim_change": perc_perim_change,
+  #  "perc_perim_change": perc_perim_change,
     "perc_county_change": perc_county_change,
-    "perc_perim_change": perc_perim_change,
     "perc_incum_precinct_match_change": perc_incum_precinct_match_change,
     "perc_incum_people_match_change": perc_incum_people_match_change,
     "perc_precinct_pair_change": perc_precinct_pair_change,
@@ -196,11 +195,11 @@ orig_split_counties = [i for i in counties if state_gdf.groupby(county_split_id)
 orig_cut_list = [sorted(i) for i in base_partition["cut_edges"]]
 
 #set up base plan and comparator plan partitions
-results_df = pd.DataFrame(columns = ['Metric'], data = ['Max Pop Dev', 'People Change', 'Area Change', 'Precinct Change', 'Perimeter Change', 'Boundary cut edge Change',  'Perimeter Change (Common Refinement)', 'Perimeter Change (Symmetric Length)', 'Perimeter Change (Symmetric Cut Edges)', 'Precinct pair change', 'County split Change','Incumbent-precinct pair change', 'Incumbent-people pair change', 'Variation of info', 'Fowlkes-Mallows Index' ])
+results_df = pd.DataFrame(columns = ['Metric'], data = ['Max Pop Dev', 'People Change', 'Area Change', 'Precinct Change', 'Cut-Edges Change',  'Perimeter Change (Common Refinement)', 'Perimeter Change (Symmetric Length)', 'Perimeter Change (Symmetric Cut Edges)', 'Precinct pair change', 'County split Change','Incumbent-precinct pair change', 'Incumbent-people pair change', 'Variation of info', 'Fowlkes-Mallows Index' ])
 for map_name in sample_plans.columns[1:]:
     compare_partition = GeographicPartition(graph = graph, assignment = map_name, updaters = my_updaters) 
     compare_dissolve = state_gdf.dissolve(by = map_name).reset_index()
-    results_df[map_name] = [compare_partition["max_pop_dev"], compare_partition["perc_people_change"],compare_partition["perc_area_change"], compare_partition["perc_precinct_change"], compare_partition["perc_perim_change"], compare_partition["perc_cut_edges_change"],perim_common_refine_change(base_dissolve, compare_dissolve), perimeter_change(compare_partition, orig_assign_dict, length = True, reference = 'symmetric'), perimeter_change(compare_partition, orig_assign_dict, length = False, reference = 'symmetric'), compare_partition["perc_precinct_pair_change"],compare_partition["perc_county_change"],compare_partition["perc_incum_precinct_match_change"], compare_partition["perc_incum_people_match_change"], compare_partition["variation_of_info"],compare_partition["FM_index"],  ]
+    results_df[map_name] = [compare_partition["max_pop_dev"], compare_partition["perc_people_change"],compare_partition["perc_area_change"], compare_partition["perc_precinct_change"], compare_partition["perc_cut_edges_change"],perim_common_refine_change(base_dissolve, compare_dissolve), perimeter_change(compare_partition, orig_assign_dict, length = True, reference = 'symmetric'), perimeter_change(compare_partition, orig_assign_dict, length = False, reference = 'symmetric'), compare_partition["perc_precinct_pair_change"],compare_partition["perc_county_change"],compare_partition["perc_incum_precinct_match_change"], compare_partition["perc_incum_people_match_change"], compare_partition["variation_of_info"],compare_partition["FM_index"],  ]
 
 results_df.to_csv('least_change_sample_plan_scores.csv', index = False)
 
