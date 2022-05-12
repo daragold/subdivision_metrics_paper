@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from gerrychain import Graph, GeographicPartition, updaters
 from functools import partial
-
+import os
 
 #cardinality scores
 def num_county_splits(partition, unit_df, unit_col ='VTDID', division_col = "COUNTYNAME"):
@@ -102,15 +102,14 @@ def cut_length(partition):
 
 
 
-def MN_score_report():
+def MN_score_report(outdir):
     #input parameters
     sample_plan_path = 'subdivision_splits_plans.csv' 
     num_districts = 8
     pop_col = 'TOTPOP'
     pop_tol = 0
     geo_id = 'VTDID'
-    plot_path = './splits/mn_precincts12_18/' 
-        
+    plot_path = './MN_shp_for_splits/' 
     #read files
     #initialize state_gdf
     state_gdf = gpd.read_file(plot_path)
@@ -150,64 +149,66 @@ def MN_score_report():
             out_scores.append(compare_partition[metric])
         results_df[map_name] = out_scores
 
-    results_df.to_csv('MN_subdivision_splits_sample_plan_scores.csv', index = False)
+    results_df.to_csv(outdir+'MN_subdivision_splits_sample_plan_scores.csv', index = False)
 
 
 
-# def grid_score_report():
+def grid_score_report(outdir):
     #input parameters
-grid_plan_path = './subdivision_splits_grid_plans.csv' 
-num_districts = 4
-pop_col = 'TOTPOP'
-pop_tol = 0
-geo_id = 'VTDID'
-    
-#read files
-#initialize state_gdf
-grid_df = pd.read_csv(grid_plan_path)
-graph = nx.grid_graph(dim = (24,24))
-graph = Graph(graph)
-for attribute in ['VTDID','COUNTYNAME','TOTPOP','Plan1','Plan2','Plan3','Plan4','Plan5','Plan6','Plan7']:
-    attribute_dict = {(x,y):attribute for x,y,attribute in zip(list(grid_df['X']),list(grid_df['Y']),list(grid_df[attribute]))}
-    for key in attribute_dict.keys():
-        graph.nodes[key][attribute] = attribute_dict[key]
-for edge in graph.edges():
-    graph.edges[edge]['shared_perim'] = 1
+    grid_plan_path = './subdivision_splits_grid_plans.csv' 
+    num_districts = 4
+    pop_col = 'TOTPOP'
+    pop_tol = 0
+    geo_id = 'VTDID'
+        
+    #read files
+    #initialize state_gdf
+    grid_df = pd.read_csv(grid_plan_path)
+    graph = nx.grid_graph(dim = (24,24))
+    graph = Graph(graph)
+    for attribute in ['VTDID','COUNTYNAME','TOTPOP','Plan1','Plan2','Plan3','Plan4','Plan5','Plan6','Plan7']:
+        attribute_dict = {(x,y):attribute for x,y,attribute in zip(list(grid_df['X']),list(grid_df['Y']),list(grid_df[attribute]))}
+        for key in attribute_dict.keys():
+            graph.nodes[key][attribute] = attribute_dict[key]
+    for edge in graph.edges():
+        graph.edges[edge]['shared_perim'] = 1
 
-total_population = grid_df[pop_col].sum()
-ideal_population = total_population/num_districts
+    total_population = grid_df[pop_col].sum()
+    ideal_population = total_population/num_districts
 
-partition_updaters = {
-    "population": updaters.Tally(pop_col, alias = "population"),
-    "max_pop_dev": max_pop_dev,
-    "num_cut_edges": cut_length,
-    "num_county_splits": partial(num_county_splits,unit_df=grid_df,unit_col=geo_id),
-    "num_unnec_county_splits": partial(num_unnec_county_splits,unit_df=grid_df,pop_col=pop_col, ideal_population=ideal_population, pop_tol=pop_tol,unit_col=geo_id),
-    "num_county_parts_all": partial(num_county_parts_all,unit_df=grid_df,unit_col=geo_id),
-    "num_county_parts_split": partial(num_county_parts_split,unit_df=grid_df,unit_col=geo_id),
-    "num_unnec_split_parts": partial(num_unnec_split_parts,unit_df=grid_df,pop_col=pop_col, ideal_population=ideal_population, pop_tol=pop_tol,unit_col=geo_id),
-    "num_fragments": partial(num_fragments,unit_df=grid_df,unit_col=geo_id),
-    "num_split_edges": num_split_edges,
-    "len_split_edges": len_split_edges,
-    "even_splits_score": partial(even_splits_score,unit_df=grid_df, pop_col=pop_col,unit_col=geo_id),
-    "root_entropy": partial(root_entropy,unit_df=grid_df,pop_col=pop_col,unit_col=geo_id),
-    "shannon_entropy": partial(shannon_entropy,unit_df=grid_df,pop_col=pop_col,unit_col=geo_id),
-}
+    partition_updaters = {
+        "population": updaters.Tally(pop_col, alias = "population"),
+        "max_pop_dev": max_pop_dev,
+        "num_cut_edges": cut_length,
+        "num_county_splits": partial(num_county_splits,unit_df=grid_df,unit_col=geo_id),
+        "num_unnec_county_splits": partial(num_unnec_county_splits,unit_df=grid_df,pop_col=pop_col, ideal_population=ideal_population, pop_tol=pop_tol,unit_col=geo_id),
+        "num_county_parts_all": partial(num_county_parts_all,unit_df=grid_df,unit_col=geo_id),
+        "num_county_parts_split": partial(num_county_parts_split,unit_df=grid_df,unit_col=geo_id),
+        "num_unnec_split_parts": partial(num_unnec_split_parts,unit_df=grid_df,pop_col=pop_col, ideal_population=ideal_population, pop_tol=pop_tol,unit_col=geo_id),
+        "num_fragments": partial(num_fragments,unit_df=grid_df,unit_col=geo_id),
+        "num_split_edges": num_split_edges,
+        "len_split_edges": len_split_edges,
+        "even_splits_score": partial(even_splits_score,unit_df=grid_df, pop_col=pop_col,unit_col=geo_id),
+        "root_entropy": partial(root_entropy,unit_df=grid_df,pop_col=pop_col,unit_col=geo_id),
+        "shannon_entropy": partial(shannon_entropy,unit_df=grid_df,pop_col=pop_col,unit_col=geo_id),
+    }
 
-metric_list = ['max_pop_dev','num_cut_edges','num_county_splits','num_unnec_county_splits','num_county_parts_all','num_county_parts_split','num_unnec_split_parts','num_fragments','num_split_edges','len_split_edges','shannon_entropy','even_splits_score','root_entropy']
+    metric_list = ['max_pop_dev','num_cut_edges','num_county_splits','num_unnec_county_splits','num_county_parts_all','num_county_parts_split','num_unnec_split_parts','num_fragments','num_split_edges','len_split_edges','shannon_entropy','even_splits_score','root_entropy']
 
-results_df = pd.DataFrame(columns = ['Metric'], data = metric_list)
-for map_name in ['Plan1', 'Plan2', 'Plan3','Plan4', 'Plan5', 'Plan6', 'Plan7']:
-    compare_partition = GeographicPartition(graph = graph, assignment = map_name, updaters = partition_updaters) 
-    out_scores = []
-    for metric in metric_list:
-        out_scores.append(compare_partition[metric])
-    results_df[map_name] = out_scores
+    results_df = pd.DataFrame(columns = ['Metric'], data = metric_list)
+    for map_name in ['Plan1', 'Plan2', 'Plan3','Plan4', 'Plan5', 'Plan6', 'Plan7']:
+        compare_partition = GeographicPartition(graph = graph, assignment = map_name, updaters = partition_updaters) 
+        out_scores = []
+        for metric in metric_list:
+            out_scores.append(compare_partition[metric])
+        results_df[map_name] = out_scores
 
-results_df.round(3).to_csv('grid_subdivision_splits_sample_plan_scores.csv', index = False)
-
-
+    results_df.round(3).to_csv(outdir+'grid_subdivision_splits_sample_plan_scores.csv', index = False)
 
 
-MN_score_report()
-grid_score_report()
+
+outdir = './splits_outputs/'
+os.makedirs(os.path.dirname(outdir), exist_ok=True)
+
+MN_score_report(outdir)
+grid_score_report(outdir)
