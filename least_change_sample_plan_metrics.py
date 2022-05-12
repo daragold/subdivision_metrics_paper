@@ -206,6 +206,6 @@ for map_name in sample_plans.columns[1:]:
 outdir = './least_change_outputs/'
 os.makedirs(os.path.dirname(outdir), exist_ok=True)
 
-results_df.to_csv(outdir+'least_change_sample_plan_scores.csv', index = False)
+results_df.round(4).to_csv(outdir+'least_change_sample_plan_scores.csv', index = False)
 
 
