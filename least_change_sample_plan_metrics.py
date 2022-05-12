@@ -21,6 +21,7 @@ from gerrychain import GeographicPartition
 import networkx as nx
 import itertools
 import maup
+import os
 
 #input parameters
 sample_plan_path = 'least_change_sample_plans.csv' 
@@ -198,6 +199,10 @@ for map_name in sample_plans.columns[1:]:
     compare_dissolve = state_gdf.dissolve(by = map_name).reset_index()
     results_df[map_name] = [compare_partition["max_pop_dev"], compare_partition["perc_people_change"],compare_partition["perc_area_change"], compare_partition["perc_precinct_change"], compare_partition["perc_cut_edges_change"],perim_common_refine_change(base_dissolve, compare_dissolve), perimeter_change(compare_partition, orig_assign_dict, length = True, reference = 'symmetric'), perimeter_change(compare_partition, orig_assign_dict, length = False, reference = 'symmetric'), compare_partition["perc_precinct_pair_change"],compare_partition["perc_county_change"],compare_partition["perc_incum_precinct_match_change"], compare_partition["perc_incum_people_match_change"], compare_partition["variation_of_info"],compare_partition["FM_index"],  ]
 
-results_df.to_csv('least_change_sample_plan_scores.csv', index = False)
+
+outdir = './least_change_outputs/'
+os.makedirs(os.path.dirname(outdir), exist_ok=True)
+
+results_df.round(4).to_csv(outdir+'least_change_sample_plan_scores.csv', index = False)
 
 
