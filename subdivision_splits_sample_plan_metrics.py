@@ -149,7 +149,7 @@ def MN_score_report(outdir):
             out_scores.append(compare_partition[metric])
         results_df[map_name] = out_scores
 
-    results_df.to_csv(outdir+'MN_subdivision_splits_sample_plan_scores.csv', index = False)
+    results_df.round(4).to_csv(outdir+'MN_subdivision_splits_sample_plan_scores.csv', index = False)
 
 
 
@@ -203,7 +203,7 @@ def grid_score_report(outdir):
             out_scores.append(compare_partition[metric])
         results_df[map_name] = out_scores
 
-    results_df.round(3).to_csv(outdir+'grid_subdivision_splits_sample_plan_scores.csv', index = False)
+    results_df.round(4).to_csv(outdir+'grid_subdivision_splits_sample_plan_scores.csv', index = False)
 
 
 
