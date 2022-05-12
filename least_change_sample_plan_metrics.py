@@ -24,18 +24,18 @@ import maup
 import os
 
 #input parameters
-sample_plan_path = 'least_change_sample_plans.csv' 
+sample_plan_path = './input_data/least_change_sample_plans.csv' 
 num_districts = 8
 state = 'MN' 
 base_map = 'CONGDIST' 
  
-tot_pop = 'TOTPOP' 
+tot_pop = 'POP_ACS18' 
 area = 'area'
 geo_id = 'VTDID'
 county_split_id = "COUNTYFIPS"
 enacted = 'CONGDIST' #current US Cong CONGDIST
 incumbent = '18incum'
-plot_path = 'mn/MN_shapefile.shp' 
+plot_path = './mn_shapefile/mn_shapefile.shp' 
     
 #read files
 #initialize state_gdf

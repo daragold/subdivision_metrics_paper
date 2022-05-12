@@ -104,12 +104,12 @@ def cut_length(partition):
 
 def MN_score_report(outdir):
     #input parameters
-    sample_plan_path = 'subdivision_splits_plans.csv' 
+    sample_plan_path = './input_data/subdivision_splits_plans.csv' 
     num_districts = 8
-    pop_col = 'TOTPOP'
+    pop_col = 'TOTPOP_10'
     pop_tol = 0
     geo_id = 'VTDID'
-    plot_path = './MN_shp_for_splits/' 
+    plot_path = './mn_shapefile/' 
     #read files
     #initialize state_gdf
     state_gdf = gpd.read_file(plot_path)
@@ -155,7 +155,7 @@ def MN_score_report(outdir):
 
 def grid_score_report(outdir):
     #input parameters
-    grid_plan_path = './subdivision_splits_grid_plans.csv' 
+    grid_plan_path = './input_data/subdivision_splits_grid_plans.csv' 
     num_districts = 4
     pop_col = 'TOTPOP'
     pop_tol = 0
