@@ -34,7 +34,7 @@ area = 'area'
 geo_id = 'VTDID'
 county_split_id = "COUNTYFIPS"
 incumbent = '18incum'
-plot_path = './mn_shapefile/mn_shapefile.shp' 
+plot_path = './input_data/mn_shapefile/mn_shapefile.shp' 
     
 #read files
 #initialize state_gdf
@@ -180,7 +180,7 @@ my_updaters = {
     "FM_index": FM_index,
     "variation_of_info": variation_of_info,
     
-    "perc_county_change": perc_county_change
+  #  "perc_county_change": perc_county_change
 }
 
 base_partition = GeographicPartition(graph = graph, assignment = base_map, updaters = my_updaters)
@@ -190,11 +190,11 @@ orig_split_counties = [i for i in counties if state_gdf.groupby(county_split_id)
 orig_cut_list = [sorted(i) for i in base_partition["cut_edges"]]
 
 #set up base plan and comparator plan partitions
-results_df = pd.DataFrame(columns = ['Metric'], data = ['Max Pop Dev', 'People Change', 'Area Change', 'Precinct Change',   'Perimeter Change (Common Refinement)', 'Perimeter Change (Symmetric Length)', 'Perimeter Change (Symmetric Cut Edges)', 'Incumbent-precinct pair change', 'Incumbent-people pair change', 'Precinct pair change','Fowlkes-Mallows Index' , 'Variation of info',  'County split Change'])
+results_df = pd.DataFrame(columns = ['Metric'], data = ['Max Pop Dev', 'People Change', 'Area Change', 'Precinct Change',   'Perimeter Change (Common Refinement)', 'Perimeter Change (Symmetric Length)', 'Perimeter Change (Symmetric Cut Edges)', 'Incumbent-precinct pair change', 'Incumbent-people pair change', 'Precinct pair change','Fowlkes-Mallows Index' , 'Variation of info'])#  'County split Change'])
 for map_name in sample_plans.columns[1:]:
     print("Processing:", map_name)
     compare_partition = GeographicPartition(graph = graph, assignment = map_name, updaters = my_updaters) 
-    results_df[map_name] = [compare_partition["max_pop_dev"], compare_partition["perc_people_change"],compare_partition["perc_area_change"], compare_partition["perc_precinct_change"], perim_common_refine_change(map_name), perimeter_change(compare_partition, orig_assign_dict, length = True, reference = 'symmetric'), perimeter_change(compare_partition, orig_assign_dict, length = False, reference = 'symmetric'), compare_partition["perc_incum_precinct_match_change"], compare_partition["perc_incum_people_match_change"], compare_partition["perc_precinct_pair_change"],compare_partition["FM_index"], compare_partition["variation_of_info"],compare_partition["perc_county_change"]  ]
+    results_df[map_name] = [compare_partition["max_pop_dev"], compare_partition["perc_people_change"],compare_partition["perc_area_change"], compare_partition["perc_precinct_change"], perim_common_refine_change(map_name), perimeter_change(compare_partition, orig_assign_dict, length = True, reference = 'symmetric'), perimeter_change(compare_partition, orig_assign_dict, length = False, reference = 'symmetric'), compare_partition["perc_incum_precinct_match_change"], compare_partition["perc_incum_people_match_change"], compare_partition["perc_precinct_pair_change"],compare_partition["FM_index"], compare_partition["variation_of_info"]] #,compare_partition["perc_county_change"]  ]
 
 
 outdir = './least_change_outputs/'
