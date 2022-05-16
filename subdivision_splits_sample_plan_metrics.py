@@ -100,8 +100,6 @@ def cut_length(partition):
     return len(partition["cut_edges"])
 
 
-
-
 def MN_score_report(outdir):
     #input parameters
     sample_plan_path = './input_data/subdivision_splits_plans.csv' 
@@ -109,7 +107,7 @@ def MN_score_report(outdir):
     pop_col = 'TOTPOP_10'
     pop_tol = 0
     geo_id = 'VTDID'
-    plot_path = './mn_shapefile/' 
+    plot_path = './input_data/mn_shapefile/' 
     #read files
     #initialize state_gdf
     state_gdf = gpd.read_file(plot_path)
