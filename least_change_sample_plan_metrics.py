@@ -226,7 +226,7 @@ def grid_plan_report(outdir):
     my_updaters.update({"variation_of_info": partial(variation_of_info, total_pop = total_population, tot_pop = tot_pop, base_partition = base_partition, num_districts = num_districts)})
     results_df = pd.DataFrame(columns = ['Metric'], data = ['Max Pop Dev', 'Num Cut Edges', 'People Change', 'Area Change', 'Precinct Change',   'Perimeter Change (Common Refinement)', 'Perimeter Change (Symmetric Length)', 'Perimeter Change (Symmetric Cut Edges)', 'Incumbent-precinct pair change', 'Incumbent-people pair change', 'Precinct pair change','Fowlkes-Mallows Index' , 'Variation of info'])#  'County split Change'])
 
-    for map_name in ['Plan1']:
+    for map_name in ['Plan1', 'Plan2', 'Plan3']:
         print("Processing:", map_name)
         my_updaters.update({"perim_comm_refine_change": partial(perim_common_refine_change, map_name = map_name, state_gdf = graph_data, graph = G, base_map = base_map , node_label = 'Node', base_partition = base_partition)})
         compare_partition = GeographicPartition(graph = G, assignment = map_name, updaters = my_updaters) 
@@ -238,5 +238,5 @@ def grid_plan_report(outdir):
 
 outdir = './least_change_outputs/'
 os.makedirs(os.path.dirname(outdir), exist_ok=True)
-MN_plan_report(outdir)
 grid_plan_report(outdir)
+MN_plan_report(outdir)
