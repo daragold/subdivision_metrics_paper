@@ -1,0 +1,51 @@
+import pandas as pd
+import geopandas as gpd
+import os
+import matplotlib.pyplot as plt
+
+def draw_graph(G, plan_assignment, unit_df, division_df, fig_name, geo_id ='GEOID10'):
+    cdict = {G.nodes[i][geo_id]:plan_assignment[i] for i in plan_assignment.keys()}
+    unit_df['color'] = unit_df.apply(lambda x: cdict[x[geo_id]], axis=1)
+    fig,ax = plt.subplots()
+    division_df.geometry.boundary.plot(color=None,edgecolor='k',linewidth = 1,ax=ax)
+    unit_df.plot(column='color',ax = ax, cmap = 'tab20')
+    ax.set_axis_off()
+    plt.savefig(fig_name, dpi = 300)
+    plt.close()
+color_list_example = [[0.72156862745098, 0.580392156862745, 0.713725490196078], [0.862745098039216, 0.713725490196078, 0.274509803921569], [0.8, 0.392156862745098, 0.325490196078431], [0.682352941176471, 0.549019607843137, 0.380392156862745], [0.352941176470588, 0.694117647058824, 0.803921568627451], [0.329411764705882, 0.47843137254902, 0.250980392156863], [0.701960784313725, 0.933333333333333, 0.756862745098039],[0.470588235294118, 0.419607843137255, 0.607843137254902],[0.701960784313725, 0.733333333333333, 0.823529411764706],[0.92156862745098, 0.909803921568627, 0.776470588235294]]
+
+def draw_graph_w_division(district_df, assignment_col, color_col, fig_name, color_type = 'cmap',cmap = 'tab20', vmin= None, vmax = None, colorbar = False, color_list = color_list_example, district_labels = True, division_df = None, inset = None, area_label_min = 1e+9, dpi = 500):
+    fig,ax = plt.subplots()
+    if division_df is not None:
+        division_df.geometry.boundary.plot(color=None,edgecolor='black',linewidth = 6 if inset else 2,ax=ax)
+    if color_type == 'cmap':
+        district_df.plot(column=color_col,ax = ax, cmap = cmap, vmin=  vmin, vmax = vmax, legend=colorbar, legend_kwds={'label': color_col})
+    elif color_type == 'list':
+        district_df.plot(color = [color_list[i] for i in list(district_df[color_col])], ax=ax)
+    if district_labels:
+        for i in range(len(district_df)):
+            if district_df['geometry'].area[i] >= area_label_min:
+                plt.annotate(district_df[assignment_col][i],(district_df["geometry"].centroid[i].x, district_df["geometry"].centroid[i].y), c='black', fontsize = 5, zorder = 3, ha='center', va='center')    
+    if inset:
+        ax.set_xlim(inset[0])
+        ax.set_ylim(inset[1])
+    ax.set_axis_off()
+    plt.tight_layout()
+    plt.savefig(fig_name,dpi = dpi)
+    plt.close()    
+
+
+mn_shp = gpd.read_file('./input_data/mn_shapefile/')
+least_change_mn_plans = pd.read_csv('./input_data/least_change_sample_plans.csv')
+subdiv_splits_mn_plans = pd.read_csv('./input_data/subdivision_splits_plans.csv')
+mn_plan_merge = mn_shp.merge(least_change_mn_plans.rename(columns = {plan:'LC_'+plan for plan in [col for col in least_change_mn_plans.columns if 'PLAN' in col.upper()]}), how = 'left', left_on = 'VTDID', right_on = 'VTDID')
+mn_plan_merge = mn_plan_merge.merge(subdiv_splits_mn_plans.rename(columns = {plan:'SPLITS_'+plan for plan in [col for col in subdiv_splits_mn_plans.columns if 'PLAN' in col.upper()]}), how = 'left', left_on = 'VTDID', right_on = 'VTDID')
+county_shp = mn_shp.dissolve(by = 'COUNTYFIPS').reset_index()
+
+
+figsdir = './figs/'
+os.makedirs(os.path.dirname(figsdir), exist_ok=True)
+
+for plan in ['CONGDIST','Enacted']+[col for col in mn_plan_merge.columns if 'PLAN' in col.upper()]:
+    draw_graph_w_division(mn_plan_merge, plan, plan, figsdir+'MN_'+plan+'_map_full.png', color_type = 'cmap',cmap = 'tab20', district_labels = False, division_df = county_shp, inset = None, dpi = 500)
+    draw_graph_w_division(mn_plan_merge, plan, plan, figsdir+'MN_'+plan+'_map_inset.png', color_type = 'cmap',cmap = 'tab20', district_labels = False, division_df = county_shp, inset = ((428316,530062),(4940966,5033176)), dpi = 500)
