@@ -14,10 +14,13 @@ def draw_graph(G, plan_assignment, unit_df, division_df, fig_name, geo_id ='GEOI
     plt.close()
 color_list_example = [[0.72156862745098, 0.580392156862745, 0.713725490196078], [0.862745098039216, 0.713725490196078, 0.274509803921569], [0.8, 0.392156862745098, 0.325490196078431], [0.682352941176471, 0.549019607843137, 0.380392156862745], [0.352941176470588, 0.694117647058824, 0.803921568627451], [0.329411764705882, 0.47843137254902, 0.250980392156863], [0.701960784313725, 0.933333333333333, 0.756862745098039],[0.470588235294118, 0.419607843137255, 0.607843137254902],[0.701960784313725, 0.733333333333333, 0.823529411764706],[0.92156862745098, 0.909803921568627, 0.776470588235294]]
 
-def draw_graph_w_division(district_df, assignment_col, color_col, fig_name, color_type = 'cmap',cmap = 'tab20', vmin= None, vmax = None, colorbar = False, color_list = color_list_example, district_labels = True, division_df = None, inset = None, area_label_min = 1e+9, dpi = 500):
+def draw_graph_w_division(district_df, assignment_col, color_col, fig_name, color_type = 'cmap',cmap = 'tab20', vmin= None, vmax = None, colorbar = False, color_list = color_list_example, district_labels = True, division_df = None, div_lw = 6, div_color = 'black',dist_outline = False, dist_lw = 6, dist_color = 'black', inset = None, area_label_min = 1e+9, dpi = 500):
     fig,ax = plt.subplots()
     if division_df is not None:
-        division_df.geometry.boundary.plot(color=None,edgecolor='black',linewidth = 6 if inset else 2,ax=ax)
+        division_df.geometry.boundary.plot(color=None,edgecolor=div_color,linewidth = div_lw,ax=ax)
+    if dist_outline:
+        dists_dissolve = district_df.dissolve(by = color_col).reset_index()
+        dists_dissolve.geometry.boundary.plot(color=None,edgecolor=dist_color,linewidth = dist_lw,ax=ax)
     if color_type == 'cmap':
         district_df.plot(column=color_col,ax = ax, cmap = cmap, vmin=  vmin, vmax = vmax, legend=colorbar, legend_kwds={'label': color_col})
     elif color_type == 'list':
@@ -46,6 +49,10 @@ county_shp = mn_shp.dissolve(by = 'COUNTYFIPS').reset_index()
 figsdir = './figs/'
 os.makedirs(os.path.dirname(figsdir), exist_ok=True)
 
-for plan in ['CONGDIST','Enacted']+[col for col in mn_plan_merge.columns if 'PLAN' in col.upper()]:
-    draw_graph_w_division(mn_plan_merge, plan, plan, figsdir+'MN_'+plan+'_map_full.png', color_type = 'cmap',cmap = 'tab20', district_labels = False, division_df = county_shp, inset = None, dpi = 500)
-    draw_graph_w_division(mn_plan_merge, plan, plan, figsdir+'MN_'+plan+'_map_inset.png', color_type = 'cmap',cmap = 'tab20', district_labels = False, division_df = county_shp, inset = ((428316,530062),(4940966,5033176)), dpi = 500)
+for plan in ['Enacted']+[col for col in mn_plan_merge.columns if 'SPLITS_PLAN' in col.upper()]:
+    draw_graph_w_division(mn_plan_merge, plan, plan, figsdir+'MN_'+plan+'_map_full.png', color_type = 'cmap',cmap = 'tab20', district_labels = False, division_df = county_shp, div_lw = 2, div_color = 'black',inset = None, dpi = 500)
+    draw_graph_w_division(mn_plan_merge, plan, plan, figsdir+'MN_'+plan+'_map_inset.png', color_type = 'cmap',cmap = 'tab20', district_labels = False, division_df = county_shp, div_lw = 6, div_color = 'black', inset = ((428316,530062),(4940966,5033176)), dpi = 500)
+
+for plan in ['CONGDIST']+[col for col in mn_plan_merge.columns if 'LC_PLAN' in col.upper()]:
+    draw_graph_w_division(mn_plan_merge, plan, plan, figsdir+'MN_'+plan+'_map_full.png', color_type = 'cmap',cmap = 'tab20', district_labels = False, division_df = county_shp, inset = None, dpi = 500,div_lw = 0.5, div_color = 'black',dist_outline = True, dist_lw = 2, dist_color = 'black')
+    draw_graph_w_division(mn_plan_merge, plan, plan, figsdir+'MN_'+plan+'_map_inset.png', color_type = 'cmap',cmap = 'tab20', district_labels = False, division_df = county_shp, inset = ((428316,530062),(4940966,5033176)), dpi = 500,div_lw = 1, div_color = 'black',dist_outline = True, dist_lw = 4, dist_color = 'black')
