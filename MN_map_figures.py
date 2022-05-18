@@ -39,7 +39,7 @@ def draw_graph_w_division(district_df, assignment_col, color_col, fig_name, colo
 
 
 mn_shp = gpd.read_file('./input_data/mn_shapefile/')
-least_change_mn_plans = pd.read_csv('./input_data/least_change_sample_plans.csv')
+least_change_mn_plans = pd.read_csv('./input_data/least_change_plans.csv')
 subdiv_splits_mn_plans = pd.read_csv('./input_data/subdivision_splits_plans.csv')
 mn_plan_merge = mn_shp.merge(least_change_mn_plans.rename(columns = {plan:'LC_'+plan for plan in [col for col in least_change_mn_plans.columns if 'PLAN' in col.upper()]}), how = 'left', left_on = 'VTDID', right_on = 'VTDID')
 mn_plan_merge = mn_plan_merge.merge(subdiv_splits_mn_plans.rename(columns = {plan:'SPLITS_'+plan for plan in [col for col in subdiv_splits_mn_plans.columns if 'PLAN' in col.upper()]}), how = 'left', left_on = 'VTDID', right_on = 'VTDID')
