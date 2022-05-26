@@ -125,22 +125,22 @@ def FM_index(partition, orig_assign_dict):
     
 def MN_plan_report(outdir):
     #input parameters
-    sample_plan_path = './input_data/least_change_sample_plans.csv' 
+    sample_plan_path = './input_data/least_change_plans_test.csv' 
     num_districts = 8
-    base_map = 'CONGDIST' 
+    base_map = 'cong_assig' #'CONGDIST' 
      
-    tot_pop = 'POP_ACS18' 
+    tot_pop =  'TOTPOP' #'POP_ACS18' 
     area = 'area'
-    geo_id = 'VTDID'
-    county_split_id = "COUNTYFIPS"
-    incumbent = '18incum'
-    plot_path = './input_data/mn_shapefile/mn_shapefile.shp' 
+    geo_id = 'VTD' #'VTDID'
+    county_split_id = 'CNTY_FIPS' #"COUNTYFIPS"
+    incumbent =  'cong_incumb' #'18incum'
+    plot_path = './input_data/mn20_shapefile/mn20_shapefile.shp' #'./input_data/mn_shapefile/mn_shapefile.shp' 
         
     #read files
     #initialize state_gdf
     state_gdf = gpd.read_file(plot_path)
     state_gdf[county_split_id] = pd.to_numeric(state_gdf[county_split_id])
-    sample_plans = pd.read_csv(sample_plan_path)     
+    sample_plans = pd.read_csv(sample_plan_path, dtype = {geo_id: 'str'})     
     state_gdf = pd.merge(state_gdf, sample_plans, on = geo_id)
     graph = Graph.from_geodataframe(state_gdf)
     graph.add_data(state_gdf)
@@ -226,7 +226,7 @@ def grid_plan_report(outdir):
     my_updaters.update({"variation_of_info": partial(variation_of_info, total_pop = total_population, tot_pop = tot_pop, base_partition = base_partition, num_districts = num_districts)})
     results_df = pd.DataFrame(columns = ['Metric'], data = ['Max Pop Dev', 'Num Cut Edges', 'People Change', 'Area Change', 'Precinct Change',   'Perimeter Change (Common Refinement)', 'Perimeter Change (Symmetric Length)', 'Perimeter Change (Symmetric Cut Edges)', 'Incumbent-precinct pair change', 'Incumbent-people pair change', 'Precinct pair change','Fowlkes-Mallows Index' , 'Variation of info'])#  'County split Change'])
 
-    for map_name in ['Plan1', 'Plan2', 'Plan3']:
+    for map_name in ['Plan1', 'Plan2', 'Plan3', 'Plan4']:
         print("Processing:", map_name)
         my_updaters.update({"perim_comm_refine_change": partial(perim_common_refine_change, map_name = map_name, state_gdf = graph_data, graph = G, base_map = base_map , node_label = 'Node', base_partition = base_partition)})
         compare_partition = GeographicPartition(graph = G, assignment = map_name, updaters = my_updaters) 
