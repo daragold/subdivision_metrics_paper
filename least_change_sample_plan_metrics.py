@@ -125,7 +125,7 @@ def FM_index(partition, orig_assign_dict):
     
 def MN_plan_report(outdir):
     #input parameters
-    sample_plan_path = './input_data/least_change_plans_test.csv' 
+    sample_plan_path = './input_data/least_change_plans_new.csv' 
     num_districts = 8
     base_map = 'cong_assig' #'CONGDIST' 
      
