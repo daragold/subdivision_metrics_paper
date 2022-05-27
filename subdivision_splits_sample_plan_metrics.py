@@ -151,18 +151,18 @@ def MN_score_report(outdir):
 
 def MN_score_report_test(outdir):
     #input parameters
-    sample_plan_path = './input_data/mn20_out_plans_test.csv' 
+    sample_plan_path = './input_data/mn20_out_plans_vtd_test.csv' 
     num_districts = 8
     pop_col = 'TOTPOP'
     pop_tol = 0
-    geo_id = 'CNTY_VTD'
+    geo_id = 'VTD'
     county_col = 'CNTY_NAME'
     plot_path = './input_data/mn20_shapefile/' 
     #read files
     #initialize state_gdf
     state_gdf = gpd.read_file(plot_path)
     sample_plans = pd.read_csv(sample_plan_path)     
-    # state_gdf[geo_id] = state_gdf[geo_id].astype('int')
+    state_gdf[geo_id] = state_gdf[geo_id].astype('int')
     state_gdf = pd.merge(state_gdf, sample_plans, on = geo_id)
     graph = Graph.from_geodataframe(state_gdf)
     graph.add_data(state_gdf)
@@ -263,15 +263,15 @@ os.makedirs(os.path.dirname(outdir), exist_ok=True)
 
 def MN_contig_test():
     #input parameters
-    sample_plan_path = './input_data/mn20_out_plans_test.csv' 
+    sample_plan_path = './input_data/mn20_out_plans_vtd_test.csv' 
     pop_col = 'TOTPOP'
-    geo_id = 'CNTY_VTD'
+    geo_id = 'VTD'
     plot_path = './input_data/mn20_shapefile/' 
     #read files
     #initialize state_gdf
     state_gdf = gpd.read_file(plot_path)
     sample_plans = pd.read_csv(sample_plan_path)     
-    # state_gdf[geo_id] = state_gdf[geo_id].astype('int')
+    state_gdf[geo_id] = state_gdf[geo_id].astype('int')
     state_gdf = pd.merge(state_gdf, sample_plans, on = geo_id)
     graph = Graph.from_geodataframe(state_gdf)
     graph.add_data(state_gdf)
