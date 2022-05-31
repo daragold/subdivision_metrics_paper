@@ -125,15 +125,14 @@ def FM_index(partition, orig_assign_dict):
     
 def MN_plan_report(outdir):
     #input parameters
-    sample_plan_path = './input_data/least_change_plans_new.csv' 
+    sample_plan_path = './input_data/least_change_plans.csv' 
     num_districts = 8
-    base_map = 'cong_assig' #'CONGDIST' 
-     
-    tot_pop =  'TOTPOP' #'POP_ACS18' 
+    base_map = 'cong_assig'      
+    tot_pop =  'TOTPOP' 
     area = 'area'
-    geo_id = 'VTD' #'VTDID'
-    county_split_id = 'CNTY_FIPS' #"COUNTYFIPS"
-    incumbent =  'cong_incumb' #'18incum'
+    geo_id = 'VTD' 
+    county_split_id = 'CNTY_FIPS'
+    incumbent =  'cong_incumb' 
     plot_path = './input_data/mn20_shapefile/mn20_shapefile.shp' 
         
     #read files
@@ -191,7 +190,6 @@ def grid_plan_report(outdir):
     num_districts = 4
     tot_pop = 'TOTPOP'
     area = 'Area'
-  #  county_split_id = "COUNTYNAME"
     incumbent = 'Incumbent'
    
     for attribute in graph_data.columns:
