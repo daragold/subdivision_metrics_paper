@@ -134,13 +134,13 @@ def MN_plan_report(outdir):
     geo_id = 'VTD' #'VTDID'
     county_split_id = 'CNTY_FIPS' #"COUNTYFIPS"
     incumbent =  'cong_incumb' #'18incum'
-    plot_path = './input_data/mn20_shapefile/mn20_shapefile.shp' #'./input_data/mn_shapefile/mn_shapefile.shp' 
+    plot_path = './input_data/mn20_shapefile/mn20_shapefile.shp' 
         
     #read files
     #initialize state_gdf
     state_gdf = gpd.read_file(plot_path)
     state_gdf[county_split_id] = pd.to_numeric(state_gdf[county_split_id])
-    sample_plans = pd.read_csv(sample_plan_path, dtype = {geo_id: 'str'})     
+    sample_plans = pd.read_csv(sample_plan_path, dtype = {geo_id: 'str'}) 
     state_gdf = pd.merge(state_gdf, sample_plans, on = geo_id)
     graph = Graph.from_geodataframe(state_gdf)
     graph.add_data(state_gdf)
