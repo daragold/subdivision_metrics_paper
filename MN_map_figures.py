@@ -51,10 +51,10 @@ def draw_graph_w_division(district_df, assignment_col, color_col, fig_name, colo
     plt.close()    
 
 
-geoid = 'VTD'#'CNTY_VTD'
+geoid = 'VTD'
 mn_shp = gpd.read_file('./input_data/mn20_shapefile/')
 least_change_mn_plans = pd.read_csv('./input_data/least_change_plans_new.csv', dtype = {geoid: 'str'})
-subdiv_splits_mn_plans = pd.read_csv('./input_data/mn20_out_plans_test.csv', dtype = {geoid: 'str'})
+subdiv_splits_mn_plans = pd.read_csv('./input_data/splits_MN20_plans.csv', dtype = {geoid: 'str'})
 mn_plan_merge = mn_shp.merge(least_change_mn_plans.rename(columns = {plan:'LC_'+plan for plan in [col for col in least_change_mn_plans.columns if 'PLAN' in col.upper()]}), how = 'left', left_on = 'VTD', right_on = 'VTD')
 mn_plan_merge = mn_plan_merge.merge(subdiv_splits_mn_plans.rename(columns = {plan:'SPLITS_'+plan for plan in [col for col in subdiv_splits_mn_plans.columns if col!=geoid]}), how = 'left', left_on = 'VTD', right_on = 'VTD')
 county_shp = mn_shp.dissolve(by = 'CNTY_FIPS').reset_index()
@@ -71,4 +71,4 @@ for plan in ['cong_assig']+[col for col in mn_plan_merge.columns if 'LC_PLAN' in
     draw_graph_w_division(mn_plan_merge, plan, plan, figsdir+'MN_'+plan+'_map_full.png', color_type = 'list',cmap = 'tab20', district_labels = False, division_df = county_shp, inset = None, dpi = 500,div_lw = 0.5, div_color = 'black',dist_outline = True, dist_lw = 2, dist_color = 'black')
     draw_graph_w_division(mn_plan_merge, plan, plan, figsdir+'MN_'+plan+'_map_inset.png', color_type = 'list',cmap = 'tab20', district_labels = False, division_df = county_shp, inset = ((428316,530062),(4940966,5033176)), dpi = 500,div_lw = 1, div_color = 'black',dist_outline = True, dist_lw = 4, dist_color = 'black')
 
-    
+
