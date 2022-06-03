@@ -248,7 +248,7 @@ def MN_contig_test():
 
 def WI_score_report_test(outdir):
     #input parameters
-    sample_plan_path = './input_data/wi20_out_plans_test.csv' 
+    sample_plan_path = './input_data/wi_proposed_plans.csv' 
     num_districts = 8
     pop_col = 'TOTPOP'
     pop_tol = 0
@@ -298,7 +298,7 @@ def WI_score_report_test(outdir):
 
 def WI_contig_test():
     #input parameters
-    sample_plan_path = './input_data/wi20_out_plans_test.csv' 
+    sample_plan_path = './input_data/wi_proposed_plans.csv' 
     pop_col = 'TOTPOP'
     geo_id = 'CNTY_WARD'
     plot_path = './input_data/wi20_shapefile/' 
@@ -331,9 +331,8 @@ def WI_contig_test():
 
 MN_score_report(outdir)
 grid_score_report(outdir)
-MN_contig_test()
-#WI_score_report_test(outdir)
-#WI_contig_test()
+WI_score_report_test(outdir)
+
 
 
 
