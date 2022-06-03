@@ -102,7 +102,7 @@ def cut_length(partition):
 
 def MN_score_report(outdir):
     #input parameters
-    sample_plan_path = './input_data/splits_MN20_plans.csv' 
+    sample_plan_path = './input_data/mn_sample_plans.csv'#'./input_data/splits_MN20_plans.csv' 
     num_districts = 8
     pop_col = 'TOTPOP'
     pop_tol = 0
@@ -332,8 +332,8 @@ def WI_contig_test():
 MN_score_report(outdir)
 grid_score_report(outdir)
 MN_contig_test()
-WI_score_report_test(outdir)
-WI_contig_test()
+#WI_score_report_test(outdir)
+#WI_contig_test()
 
 
 
