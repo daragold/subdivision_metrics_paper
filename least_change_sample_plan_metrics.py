@@ -123,7 +123,8 @@ def FM_index(partition, orig_assign_dict):
     return 1- (np.sqrt((num_pp/combo_pairs_orig)*(num_pp/combo_pairs_new)))
 
 
-#run metrics       
+#Generate tables of change-metrics for grid examples, Minnesota sample plans and Wisconsin real-world plans    
+
 def MN_plan_report(outdir):
     #input parameters
     sample_plan_path =  './input_data/mn_sample_plans.csv'  #'./input_data/least_change_plans.csv' 
@@ -170,7 +171,7 @@ def MN_plan_report(outdir):
    #set up base plan and comparator plan partitions
     results_df = pd.DataFrame(columns = ['Metric'], data = ['Max Pop Dev', 'Num Cut Edges', 'People Change', 'Area Change', 'Precinct Change',   'Perimeter Change (Common Refinement)', 'Perimeter Change (Symmetric Length)', 'Perimeter Change (Symmetric Cut Edges)', 'Incumbent-precinct pair change', 'Incumbent-people pair change', 'Precinct pair change','Fowlkes-Mallows Index' , 'Variation of info'])#  'County split Change'])
     for map_name in sample_plans.columns[1:]:
-        print("Processing:", map_name)
+        print("Minnesota Processing:", map_name)
         my_updaters.update({"perim_comm_refine_change": partial(perim_common_refine_change, map_name = map_name, state_gdf = state_gdf, graph = graph, base_map = base_map , node_label = 'index', base_partition = base_partition)})
         compare_partition = GeographicPartition(graph = graph, assignment = map_name, updaters = my_updaters) 
         results_df[map_name] = [compare_partition["max_pop_dev"], compare_partition['num_cut_edges'], compare_partition["perc_people_change"],compare_partition["perc_area_change"], compare_partition["perc_precinct_change"], compare_partition["perim_comm_refine_change"], compare_partition["perim_change_sym_length"],  compare_partition["perim_change_sym_cut_edges"], compare_partition["perc_incum_precinct_match_change"], compare_partition["perc_incum_people_match_change"], compare_partition["perc_precinct_pair_change"],compare_partition["FM_index"], compare_partition["variation_of_info"]] #,compare_partition["perc_county_change"]  ]
@@ -180,7 +181,7 @@ def MN_plan_report(outdir):
 
 def WI_plan_report(outdir):
     #input parameters
-    sample_plan_path = './input_data/wi20_out_plans_test.csv' 
+    sample_plan_path = './input_data/wi_proposed_plans.csv' 
     num_districts = 8
     base_map = 'CON'      
     tot_pop =  'TOTPOP' 
@@ -224,7 +225,7 @@ def WI_plan_report(outdir):
    #set up base plan and comparator plan partitions
     results_df = pd.DataFrame(columns = ['Metric'], data = ['Max Pop Dev', 'Num Cut Edges', 'People Change', 'Area Change', 'Precinct Change',   'Perimeter Change (Common Refinement)', 'Perimeter Change (Symmetric Length)', 'Perimeter Change (Symmetric Cut Edges)', 'Incumbent-precinct pair change', 'Incumbent-people pair change', 'Precinct pair change','Fowlkes-Mallows Index' , 'Variation of info'])#  'County split Change'])
     for map_name in sample_plans.columns[1:]:
-        print("Processing:", map_name)
+        print("Wisconsin Processing:", map_name)
         my_updaters.update({"perim_comm_refine_change": partial(perim_common_refine_change, map_name = map_name, state_gdf = state_gdf, graph = graph, base_map = base_map , node_label = 'index', base_partition = base_partition)})
         compare_partition = GeographicPartition(graph = graph, assignment = map_name, updaters = my_updaters) 
         results_df[map_name] = [compare_partition["max_pop_dev"], compare_partition['num_cut_edges'], compare_partition["perc_people_change"],compare_partition["perc_area_change"], compare_partition["perc_precinct_change"], compare_partition["perim_comm_refine_change"], compare_partition["perim_change_sym_length"],  compare_partition["perim_change_sym_cut_edges"], compare_partition["perc_incum_precinct_match_change"], compare_partition["perc_incum_people_match_change"], compare_partition["perc_precinct_pair_change"],compare_partition["FM_index"], compare_partition["variation_of_info"]] #,compare_partition["perc_county_change"]  ]
@@ -280,7 +281,7 @@ def grid_plan_report(outdir):
     results_df = pd.DataFrame(columns = ['Metric'], data = ['Max Pop Dev', 'Num Cut Edges', 'People Change', 'Area Change', 'Precinct Change',   'Perimeter Change (Common Refinement)', 'Perimeter Change (Symmetric Length)', 'Perimeter Change (Symmetric Cut Edges)', 'Incumbent-precinct pair change', 'Incumbent-people pair change', 'Precinct pair change','Fowlkes-Mallows Index' , 'Variation of info'])#  'County split Change'])
 
     for map_name in ['Plan1', 'Plan2', 'Plan3', 'Plan4']:
-        print("Processing:", map_name)
+        print("Grid Processing:", map_name)
         my_updaters.update({"perim_comm_refine_change": partial(perim_common_refine_change, map_name = map_name, state_gdf = graph_data, graph = G, base_map = base_map , node_label = 'Node', base_partition = base_partition)})
         compare_partition = GeographicPartition(graph = G, assignment = map_name, updaters = my_updaters) 
         results_df[map_name] = [compare_partition["max_pop_dev"],compare_partition['num_cut_edges'], compare_partition["perc_people_change"],compare_partition["perc_area_change"], compare_partition["perc_precinct_change"], compare_partition["perim_comm_refine_change"], compare_partition["perim_change_sym_length"],  compare_partition["perim_change_sym_cut_edges"], compare_partition["perc_incum_precinct_match_change"], compare_partition["perc_incum_people_match_change"], compare_partition["perc_precinct_pair_change"],compare_partition["FM_index"], compare_partition["variation_of_info"]] 
