@@ -24,7 +24,7 @@ import os
 import ast
 from functools import partial
 
-#change metrics
+#change metric functions
 def max_pop_dev(partition):
     dev_high = max(partition.population.values())-sum(partition.population.values())/len(partition)
     dev_low = sum(partition.population.values())/len(partition) - min(partition.population.values())
@@ -122,9 +122,8 @@ def FM_index(partition, orig_assign_dict):
     
     return 1- (np.sqrt((num_pp/combo_pairs_orig)*(num_pp/combo_pairs_new)))
 
-
+#####################################################################################################################
 #Generate tables of change-metrics for grid examples, Minnesota sample plans and Wisconsin real-world plans    
-
 def MN_plan_report(outdir):
     #input parameters
     sample_plan_path =  './input_data/mn_sample_plans.csv'  #'./input_data/least_change_plans.csv' 
@@ -278,7 +277,7 @@ def grid_plan_report(outdir):
 
     base_partition = GeographicPartition(graph = G, assignment = base_map, updaters = my_updaters)
     my_updaters.update({"variation_of_info": partial(variation_of_info, total_pop = total_population, tot_pop = tot_pop, base_partition = base_partition, num_districts = num_districts)})
-    results_df = pd.DataFrame(columns = ['Metric'], data = ['Max Pop Dev', 'Num Cut Edges', 'People Change', 'Area Change', 'Precinct Change',   'Perimeter Change (Common Refinement)', 'Perimeter Change (Symmetric Length)', 'Perimeter Change (Symmetric Cut Edges)', 'Incumbent-precinct pair change', 'Incumbent-people pair change', 'Precinct pair change','Fowlkes-Mallows Index' , 'Variation of info'])#  'County split Change'])
+    results_df = pd.DataFrame(columns = ['Metric'], data = ['Max Pop Dev', 'Num Cut Edges', 'People Change', 'Area Change', 'Precinct Change',   'Perimeter Change (Common Refinement)', 'Perimeter Change (Symmetric Length)', 'Perimeter Change (Symmetric Cut Edges)', 'Incumbent-precinct pair change', 'Incumbent-people pair change', 'Precinct pair change','Fowlkes-Mallows Index' , 'Variation of info'])
 
     for map_name in ['Plan1', 'Plan2', 'Plan3', 'Plan4']:
         print("Grid Processing:", map_name)
@@ -292,6 +291,6 @@ def grid_plan_report(outdir):
 
 outdir = './least_change_outputs/'
 os.makedirs(os.path.dirname(outdir), exist_ok=True)
-grid_plan_report(outdir)
-MN_plan_report(outdir)
+#grid_plan_report(outdir)
+#MN_plan_report(outdir)
 WI_plan_report(outdir)
