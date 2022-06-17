@@ -55,27 +55,29 @@ def draw_graph_w_division(district_df, assignment_col, color_col, fig_name, colo
     plt.close()    
 
 
-geoid = 'VTD'
-mn_shp = gpd.read_file('./input_data/mn20_shapefile/')
-least_change_mn_plans = pd.read_csv('./input_data/least_change_plans.csv', dtype = {geoid: 'str'})
-subdiv_splits_mn_plans = pd.read_csv('./input_data/splits_MN20_plans.csv', dtype = {geoid: 'str'})
-mn_plan_merge = mn_shp.merge(least_change_mn_plans.rename(columns = {plan:'LC_'+plan for plan in [col for col in least_change_mn_plans.columns if ('PLAN' in col.upper() or 'COURT' in col.upper() )]}), how = 'left', on = geoid)
-mn_plan_merge = mn_plan_merge.merge(subdiv_splits_mn_plans.rename(columns = {plan:'SPLITS_'+plan for plan in [col for col in subdiv_splits_mn_plans.columns if 'PLAN' in col.upper() or 'COURT' in col.upper()]}), how = 'left', on = geoid)
-county_shp = mn_shp.dissolve(by = 'CNTY_FIPS').reset_index()
-
 
 figsdir = './figs/'
 os.makedirs(os.path.dirname(figsdir), exist_ok=True)
 
-# for plan in [col for col in mn_plan_merge.columns if 'SPLITS_' in col.upper()]:
-#    draw_graph_w_division(mn_plan_merge, plan, plan, figsdir+'MN_'+plan+'_map_full.png', color_type = 'list',cmap = 'tab20', district_labels = False, division_df = county_shp, div_lw = 2, div_color = 'black',inset = None, dpi = 500)
-#    draw_graph_w_division(mn_plan_merge, plan, plan, figsdir+'MN_'+plan+'_map_inset.png', color_type = 'list',cmap = 'tab20', district_labels = False, division_df = county_shp, div_lw = 6, div_color = 'black', inset = ((428316,530062),(4940966,5033176)), dpi = 500)
+#MN
+geoid = 'VTD'
+mn_shp = gpd.read_file('./input_data/mn20_shapefile/')
+mn_plans = pd.read_csv('./input_data/mn_sample_plans.csv', dtype = {geoid: 'str'})
+mn_plan_merge = mn_shp.merge(mn_plans, how = 'left', on = geoid)
+mn_county_shp = mn_shp.dissolve(by = 'CNTY_FIPS').reset_index()
 
-# for plan in ['cong_assig']+[col for col in mn_plan_merge.columns if 'LC_' in col.upper()]:
-#     draw_graph_w_division(mn_plan_merge, plan, plan, figsdir+'MN_'+plan+'_map_full.png', color_type = 'list',cmap = 'tab20', district_labels = False, division_df = county_shp, inset = None, dpi = 500,div_lw = 0.5, div_color = 'black',dist_outline = True, dist_lw = 2, dist_color = 'black')
-#     draw_graph_w_division(mn_plan_merge, plan, plan, figsdir+'MN_'+plan+'_map_inset.png', color_type = 'list',cmap = 'tab20', district_labels = False, division_df = county_shp, inset = ((428316,530062),(4940966,5033176)), dpi = 500,div_lw = 1, div_color = 'black',dist_outline = True, dist_lw = 4, dist_color = 'black')
+for plan in ['cong_assig','COURT_ORDERED']+[col for col in mn_plan_merge.columns if 'PLAN' in col.upper()]:
+   draw_graph_w_division(mn_plan_merge, plan, plan, figsdir+'MN_'+plan+'_map_full.png', color_type = 'list',cmap = 'tab20', district_labels = False, division_df = mn_county_shp, div_lw = 1, div_color = 'black',div_zorder = 2, div_ls = '-',dist_outline = True, dist_lw = 1,dist_color = 'white',dist_zorder = 1,inset = None, dpi = 500)
+   draw_graph_w_division(mn_plan_merge, plan, plan, figsdir+'MN_'+plan+'_map_inset.png', color_type = 'list',cmap = 'tab20', district_labels = False, division_df = mn_county_shp, div_lw = 2, div_color = 'black',div_zorder = 2, div_ls = '-',dist_outline = True, dist_lw = 2,dist_color = 'white', dist_zorder = 1,inset = ((428316,530062),(4940966,5033176)), dpi = 500)
 
 
-for plan in [col for col in mn_plan_merge.columns if 'SPLITS_' in col.upper()]+['cong_assig']+[col for col in mn_plan_merge.columns if 'LC_' in col.upper()]:
-   draw_graph_w_division(mn_plan_merge, plan, plan, figsdir+'MN_'+plan+'_map_full.png', color_type = 'list',cmap = 'tab20', district_labels = False, division_df = county_shp, div_lw = 1, div_color = 'black',div_zorder = 2, div_ls = '-',dist_outline = True, dist_lw = 1,dist_color = 'white',dist_zorder = 1,inset = None, dpi = 500)
-   draw_graph_w_division(mn_plan_merge, plan, plan, figsdir+'MN_'+plan+'_map_inset.png', color_type = 'list',cmap = 'tab20', district_labels = False, division_df = county_shp, div_lw = 2, div_color = 'black',div_zorder = 2, div_ls = '-',dist_outline = True, dist_lw = 2,dist_color = 'white', dist_zorder = 1,inset = ((428316,530062),(4940966,5033176)), dpi = 500)
+#WI
+geoid = 'CNTY_WARD'
+wi_shp = gpd.read_file('./input_data/wi20_shapefile/')
+wi_plans = pd.read_csv('./input_data/wi_proposed_plans.csv', dtype = {geoid: 'str'})
+wi_plan_merge = wi_shp.merge(wi_plans, how = 'left', on = geoid)
+wi_county_shp = wi_shp.dissolve(by = 'CNTY_FIPS').reset_index()
+
+for plan in [col for col in wi_plan_merge.columns if 'CON' in col]:
+   draw_graph_w_division(wi_plan_merge, plan, plan, figsdir+'WI_'+plan+'_map_full.png', color_type = 'list',cmap = 'tab20', district_labels = False, division_df = wi_county_shp, div_lw = 1, div_color = 'black',div_zorder = 2, div_ls = '-',dist_outline = True, dist_lw = 1,dist_color = 'white',dist_zorder = 1,inset = None, dpi = 500)
+
