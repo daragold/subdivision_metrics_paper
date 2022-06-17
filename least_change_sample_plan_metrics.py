@@ -291,6 +291,6 @@ def grid_plan_report(outdir):
 
 outdir = './least_change_outputs/'
 os.makedirs(os.path.dirname(outdir), exist_ok=True)
-#grid_plan_report(outdir)
-#MN_plan_report(outdir)
-WI_plan_report(outdir)
+grid_plan_report(outdir)
+MN_plan_report(outdir)
+#WI_plan_report(outdir)
