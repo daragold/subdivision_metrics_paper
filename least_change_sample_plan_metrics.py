@@ -24,7 +24,7 @@ import os
 import ast
 from functools import partial
 
-
+#change metrics
 def max_pop_dev(partition):
     dev_high = max(partition.population.values())-sum(partition.population.values())/len(partition)
     dev_low = sum(partition.population.values())/len(partition) - min(partition.population.values())
@@ -121,8 +121,9 @@ def FM_index(partition, orig_assign_dict):
             combo_pairs_new += 1
     
     return 1- (np.sqrt((num_pp/combo_pairs_orig)*(num_pp/combo_pairs_new)))
-    
-    
+
+
+#run metrics       
 def MN_plan_report(outdir):
     #input parameters
     sample_plan_path =  './input_data/mn_sample_plans.csv'  #'./input_data/least_change_plans.csv' 
@@ -290,6 +291,6 @@ def grid_plan_report(outdir):
 
 outdir = './least_change_outputs/'
 os.makedirs(os.path.dirname(outdir), exist_ok=True)
-#grid_plan_report(outdir)
+grid_plan_report(outdir)
 MN_plan_report(outdir)
-#WI_plan_report(outdir)
+WI_plan_report(outdir)
