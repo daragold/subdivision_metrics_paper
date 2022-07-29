@@ -1,3 +1,5 @@
+### Subsivision-Split and Least-Change Metrics
+
 This repo contains the code and data to supplement "The Gameability of Redistricting Criteria"
 
 
