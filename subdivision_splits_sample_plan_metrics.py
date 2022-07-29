@@ -2,8 +2,6 @@ import pandas as pd
 import geopandas as gpd
 import math
 import networkx as nx
-import numpy as np
-import matplotlib.pyplot as plt
 from gerrychain import Graph, GeographicPartition, updaters
 from functools import partial
 import os
@@ -99,59 +97,6 @@ def max_pop_dev(partition):
 def cut_length(partition):
     return len(partition["cut_edges"])
 
-
-def MN_score_report(outdir):
-    #input parameters
-    sample_plan_path = './input_data/mn_sample_plans.csv'#'./input_data/splits_MN20_plans.csv' 
-    num_districts = 8
-    pop_col = 'TOTPOP'
-    pop_tol = 0
-    geo_id = 'VTD'
-    county_col = 'CNTY_NAME'
-    plot_path = './input_data/mn20_shapefile/' 
-    #read files
-    #initialize state_gdf
-    state_gdf = gpd.read_file(plot_path)
-    sample_plans = pd.read_csv(sample_plan_path)     
-    state_gdf[geo_id] = state_gdf[geo_id].astype('int')
-    state_gdf = pd.merge(state_gdf, sample_plans, on = geo_id)
-    graph = Graph.from_geodataframe(state_gdf)
-    graph.add_data(state_gdf)
-
-    total_population = state_gdf[pop_col].sum()
-    ideal_population = total_population/num_districts
-
-    partition_updaters = {
-        "population": updaters.Tally(pop_col, alias = "population"),
-        "max_pop_dev": max_pop_dev,
-        "num_cut_edges": cut_length,
-        "num_county_splits": partial(num_county_splits,unit_df=state_gdf,unit_col=geo_id, division_col = county_col),
-        "num_unnec_county_splits": partial(num_unnec_county_splits,unit_df=state_gdf,pop_col=pop_col, ideal_population=ideal_population, pop_tol=pop_tol,unit_col=geo_id, division_col = county_col),
-        "num_county_parts_all": partial(num_county_parts_all,unit_df=state_gdf,unit_col=geo_id, division_col = county_col),
-        "num_county_parts_split": partial(num_county_parts_split,unit_df=state_gdf,unit_col=geo_id, division_col = county_col),
-        "num_unnec_split_parts": partial(num_unnec_split_parts,unit_df=state_gdf,pop_col=pop_col, ideal_population=ideal_population, pop_tol=pop_tol,unit_col=geo_id, division_col = county_col),
-        "num_fragments": partial(num_fragments,unit_df=state_gdf,unit_col=geo_id, division_col = county_col),
-        "num_split_edges": partial(num_split_edges, division_col = county_col),
-        "len_split_edges": partial(len_split_edges, division_col = county_col),
-        "even_splits_score": partial(even_splits_score,unit_df=state_gdf, pop_col=pop_col,unit_col=geo_id, division_col = county_col),
-        "root_entropy": partial(root_entropy,unit_df=state_gdf,pop_col=pop_col,unit_col=geo_id, division_col = county_col),
-        "shannon_entropy": partial(shannon_entropy,unit_df=state_gdf,pop_col=pop_col,unit_col=geo_id, division_col = county_col),
-    }
-
-    metric_list = ['max_pop_dev','num_cut_edges','num_county_splits','num_unnec_county_splits','num_county_parts_all','num_county_parts_split','num_unnec_split_parts','num_fragments','num_split_edges','len_split_edges','shannon_entropy','even_splits_score','root_entropy']
-
-    results_df = pd.DataFrame(columns = ['Metric'], data = metric_list)
-    for map_name in sample_plans.columns[1:]:
-        compare_partition = GeographicPartition(graph = graph, assignment = map_name, updaters = partition_updaters) 
-        out_scores = []
-        for metric in metric_list:
-            out_scores.append(compare_partition[metric])
-        results_df[map_name] = out_scores
-
-    results_df.round(4).to_csv(outdir+'MN_subdivision_splits_sample_plan_scores.csv', index = False)
-
-
-
 def grid_score_report(outdir):
     #input parameters
     grid_plan_path = './input_data/subdivision_splits_grid_plans.csv' 
@@ -204,17 +149,14 @@ def grid_score_report(outdir):
 
     results_df.round(4).to_csv(outdir+'grid_subdivision_splits_sample_plan_scores.csv', index = False)
 
-
-
-outdir = './splits_outputs/'
-os.makedirs(os.path.dirname(outdir), exist_ok=True)
-
-
-def MN_contig_test():
+def MN_score_report(outdir):
     #input parameters
-    sample_plan_path = './input_data/mn20_out_plans_vtd_test.csv' 
+    sample_plan_path = './input_data/mn_sample_plans.csv'#'./input_data/splits_MN20_plans.csv' 
+    num_districts = 8
     pop_col = 'TOTPOP'
+    pop_tol = 0
     geo_id = 'VTD'
+    county_col = 'CNTY_NAME'
     plot_path = './input_data/mn20_shapefile/' 
     #read files
     #initialize state_gdf
@@ -225,28 +167,39 @@ def MN_contig_test():
     graph = Graph.from_geodataframe(state_gdf)
     graph.add_data(state_gdf)
 
+    total_population = state_gdf[pop_col].sum()
+    ideal_population = total_population/num_districts
+
     partition_updaters = {
         "population": updaters.Tally(pop_col, alias = "population"),
         "max_pop_dev": max_pop_dev,
         "num_cut_edges": cut_length,
+        "num_county_splits": partial(num_county_splits,unit_df=state_gdf,unit_col=geo_id, division_col = county_col),
+        "num_unnec_county_splits": partial(num_unnec_county_splits,unit_df=state_gdf,pop_col=pop_col, ideal_population=ideal_population, pop_tol=pop_tol,unit_col=geo_id, division_col = county_col),
+        "num_county_parts_all": partial(num_county_parts_all,unit_df=state_gdf,unit_col=geo_id, division_col = county_col),
+        "num_county_parts_split": partial(num_county_parts_split,unit_df=state_gdf,unit_col=geo_id, division_col = county_col),
+        "num_unnec_split_parts": partial(num_unnec_split_parts,unit_df=state_gdf,pop_col=pop_col, ideal_population=ideal_population, pop_tol=pop_tol,unit_col=geo_id, division_col = county_col),
+        "num_fragments": partial(num_fragments,unit_df=state_gdf,unit_col=geo_id, division_col = county_col),
+        "num_split_edges": partial(num_split_edges, division_col = county_col),
+        "len_split_edges": partial(len_split_edges, division_col = county_col),
+        "even_splits_score": partial(even_splits_score,unit_df=state_gdf, pop_col=pop_col,unit_col=geo_id, division_col = county_col),
+        "root_entropy": partial(root_entropy,unit_df=state_gdf,pop_col=pop_col,unit_col=geo_id, division_col = county_col),
+        "shannon_entropy": partial(shannon_entropy,unit_df=state_gdf,pop_col=pop_col,unit_col=geo_id, division_col = county_col),
     }
 
+    metric_list = ['max_pop_dev','num_cut_edges','num_county_splits','num_unnec_county_splits','num_county_parts_all','num_county_parts_split','num_unnec_split_parts','num_fragments','num_split_edges','len_split_edges','shannon_entropy','even_splits_score','root_entropy']
+
+    results_df = pd.DataFrame(columns = ['Metric'], data = metric_list)
     for map_name in sample_plans.columns[1:]:
         compare_partition = GeographicPartition(graph = graph, assignment = map_name, updaters = partition_updaters) 
-        for part in compare_partition.parts:
-            subg = compare_partition.graph.subgraph(compare_partition.parts[part])
-            num_cc = nx.number_connected_components(subg)
-            if num_cc > 1:
-                print(map_name, part, num_cc,len(subg.nodes()))
-                for cc in nx.connected_components(subg):
-                    print(len(cc))
-                    if len(cc)<10:
-                        print([subg.nodes[v][geo_id] for v in cc])
+        out_scores = []
+        for metric in metric_list:
+            out_scores.append(compare_partition[metric])
+        results_df[map_name] = out_scores
 
+    results_df.round(4).to_csv(outdir+'MN_subdivision_splits_sample_plan_scores.csv', index = False)
 
-
-
-def WI_score_report_test(outdir):
+def WI_score_report(outdir):
     #input parameters
     sample_plan_path = './input_data/wi_proposed_plans.csv' 
     num_districts = 8
@@ -293,45 +246,14 @@ def WI_score_report_test(outdir):
             out_scores.append(compare_partition[metric])
         results_df[map_name] = out_scores
 
-    results_df.round(4).to_csv(outdir+'WI_subdivision_splits_sample_plan_scores_test.csv', index = False)
+    results_df.round(4).to_csv(outdir+'WI_subdivision_splits_sample_plan_scores.csv', index = False)
 
+outdir = './splits_outputs/'
+os.makedirs(os.path.dirname(outdir), exist_ok=True)
 
-def WI_contig_test():
-    #input parameters
-    sample_plan_path = './input_data/wi_proposed_plans.csv' 
-    pop_col = 'TOTPOP'
-    geo_id = 'CNTY_WARD'
-    plot_path = './input_data/wi20_shapefile/' 
-    #read files
-    #initialize state_gdf
-    state_gdf = gpd.read_file(plot_path)
-    sample_plans = pd.read_csv(sample_plan_path)     
-    state_gdf = pd.merge(state_gdf, sample_plans, on = geo_id)
-    graph = Graph.from_geodataframe(state_gdf)
-    graph.add_data(state_gdf)
-
-    partition_updaters = {
-        "population": updaters.Tally(pop_col, alias = "population"),
-        "max_pop_dev": max_pop_dev,
-        "num_cut_edges": cut_length,
-    }
-
-    for map_name in sample_plans.columns[1:]:
-        compare_partition = GeographicPartition(graph = graph, assignment = map_name, updaters = partition_updaters) 
-        for part in compare_partition.parts:
-            subg = compare_partition.graph.subgraph(compare_partition.parts[part])
-            num_cc = nx.number_connected_components(subg)
-            if num_cc > 1:
-                print(map_name, part, num_cc,len(subg.nodes()))
-                for cc in nx.connected_components(subg):
-                    print(len(cc))
-                    if len(cc)<10:
-                        print([subg.nodes[v][geo_id] for v in cc])
-
-
-MN_score_report(outdir)
 grid_score_report(outdir)
-WI_score_report_test(outdir)
+MN_score_report(outdir)
+WI_score_report(outdir)
 
 
 

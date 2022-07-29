@@ -14,9 +14,6 @@ def draw_graph(G, plan_assignment, unit_df, division_df, fig_name, geo_id ='GEOI
     plt.close()
 
 color_list_example = [
-    # [0.352941176470588, 0.694117647058824, 0.803921568627451], 
-    # [0.701960784313725, 0.933333333333333, 0.756862745098039],#try
-    # [0.470588235294118, 0.419607843137255, 0.607843137254902],
     [0.92156862745098, 0.909803921568627, 0.776470588235294],
     [0.72156862745098, 0.580392156862745, 0.713725490196078], 
     [0.862745098039216, 0.713725490196078, 0.274509803921569], 
@@ -53,8 +50,6 @@ def draw_graph_w_division(district_df, assignment_col, color_col, fig_name, colo
     plt.tight_layout()
     plt.savefig(fig_name,dpi = dpi)
     plt.close()    
-
-
 
 figsdir = './figs/'
 os.makedirs(os.path.dirname(figsdir), exist_ok=True)

@@ -8,12 +8,7 @@ import numpy as np
 import geopandas as gpd
 import pandas as pd
 from gerrychain import (
-    Election,
     Graph,
-    MarkovChain,
-    Partition,
-    accept,
-    constraints,
     updaters,
 )
 from gerrychain.updaters import cut_edges
@@ -124,9 +119,65 @@ def FM_index(partition, orig_assign_dict):
 
 #####################################################################################################################
 #Generate tables of change-metrics for grid examples, Minnesota sample plans and Wisconsin real-world plans    
+def grid_plan_report(outdir):
+    adj_matrix = pd.read_csv('./input_data/least_change_grid_adjacency_matrix.csv', index_col = 0).fillna(0)
+    grid_graph = nx.from_numpy_matrix(adj_matrix.to_numpy())
+    node_mapping = {k:k+1 for k in grid_graph.nodes}
+    G = nx.relabel_nodes(grid_graph, node_mapping)
+    graph_data = pd.read_csv('./input_data/least_change_grid_plans.csv')
+    edge_data = pd.read_csv('./input_data/least_change_grid_non1_edge_lengths.csv', converters={"Edge": ast.literal_eval})
+    edge_data_dict = dict(zip(edge_data['Edge'], edge_data['perim']))
+    
+    base_map = 'BasePlan'
+    num_districts = 4
+    tot_pop = 'TOTPOP'
+    area = 'Area'
+    incumbent = 'Incumbent'
+   
+    for attribute in graph_data.columns:
+        attribute_dict = {x:attribute for x,attribute in zip(list(graph_data['Node']),list(graph_data[attribute]))}
+        for key in attribute_dict.keys():
+            G.nodes[key][attribute] = attribute_dict[key]
+
+    for edge in G.edges():
+        G.edges[edge]['shared_perim'] = 1 if edge not in edge_data_dict.keys() else edge_data_dict[edge]
+    
+    orig_assign_dict = {node: G.nodes[node][base_map] for node in G.nodes}
+    total_population = graph_data[tot_pop].sum()
+    
+    my_updaters = {
+    "population": updaters.Tally(tot_pop, alias = "population"),
+    "incumbents": updaters.Tally(incumbent, alias = "incumbents"),
+    "cut_edges": cut_edges,
+    "num_cut_edges": cut_length,
+    "max_pop_dev": max_pop_dev,
+    "perc_people_change": partial(perc_people_change, total_pop = total_population, tot_pop = tot_pop, orig_assign_dict = orig_assign_dict),
+    "perc_area_change": partial(perc_area_change, area = area, orig_assign_dict = orig_assign_dict),
+    "perc_precinct_change": partial(perc_precinct_change,orig_assign_dict = orig_assign_dict),
+    "perc_incum_precinct_match_change": perc_incum_precinct_match_change,
+    "perc_incum_people_match_change": partial(perc_incum_people_match_change, total_pop = total_population, tot_pop = tot_pop),
+    "perc_precinct_pair_change": partial(perc_precinct_pair_change,orig_assign_dict = orig_assign_dict),
+    "perim_change_sym_length": partial(perimeter_change,  orig_assign_dict = orig_assign_dict, length = True, reference = 'symmetric'),
+    "perim_change_sym_cut_edges": partial(perimeter_change,  orig_assign_dict = orig_assign_dict, length = False, reference = 'symmetric'), 
+    "FM_index": partial(FM_index, orig_assign_dict = orig_assign_dict)
+    }
+
+    base_partition = GeographicPartition(graph = G, assignment = base_map, updaters = my_updaters)
+    my_updaters.update({"variation_of_info": partial(variation_of_info, total_pop = total_population, tot_pop = tot_pop, base_partition = base_partition, num_districts = num_districts)})
+    results_df = pd.DataFrame(columns = ['Metric'], data = ['Max Pop Dev', 'Num Cut Edges', 'People Change', 'Area Change', 'Precinct Change',   'Perimeter Change (Common Refinement)', 'Perimeter Change (Symmetric Length)', 'Perimeter Change (Symmetric Cut Edges)', 'Incumbent-precinct pair change', 'Incumbent-people pair change', 'Precinct pair change','Fowlkes-Mallows Index' , 'Variation of info'])
+
+    for map_name in ['Plan1', 'Plan2', 'Plan3', 'Plan4']:
+        print("Grid Processing:", map_name)
+        my_updaters.update({"perim_comm_refine_change": partial(perim_common_refine_change, map_name = map_name, state_gdf = graph_data, graph = G, base_map = base_map , node_label = 'Node', base_partition = base_partition)})
+        compare_partition = GeographicPartition(graph = G, assignment = map_name, updaters = my_updaters) 
+        results_df[map_name] = [compare_partition["max_pop_dev"],compare_partition['num_cut_edges'], compare_partition["perc_people_change"],compare_partition["perc_area_change"], compare_partition["perc_precinct_change"], compare_partition["perim_comm_refine_change"], compare_partition["perim_change_sym_length"],  compare_partition["perim_change_sym_cut_edges"], compare_partition["perc_incum_precinct_match_change"], compare_partition["perc_incum_people_match_change"], compare_partition["perc_precinct_pair_change"],compare_partition["FM_index"], compare_partition["variation_of_info"]] 
+    
+        
+        results_df.round(4).to_csv(outdir+'least_change_sample_grid_plan_scores.csv', index = False)
+
 def MN_plan_report(outdir):
     #input parameters
-    sample_plan_path =  './input_data/mn_sample_plans.csv'  #'./input_data/least_change_plans.csv' 
+    sample_plan_path =  './input_data/mn_sample_plans.csv' 
     num_districts = 8
     base_map = 'cong_assig'      
     tot_pop =  'TOTPOP' 
@@ -231,66 +282,9 @@ def WI_plan_report(outdir):
     
     results_df.round(4).to_csv(outdir+'least_change_sample_WI_plan_scores.csv', index = False)
 
-
-def grid_plan_report(outdir):
-    adj_matrix = pd.read_csv('./input_data/least_change_grid_adjacency_matrix.csv', index_col = 0).fillna(0)
-    grid_graph = nx.from_numpy_matrix(adj_matrix.to_numpy())
-    node_mapping = {k:k+1 for k in grid_graph.nodes}
-    G = nx.relabel_nodes(grid_graph, node_mapping)
-    graph_data = pd.read_csv('./input_data/least_change_grid_plans.csv')
-    edge_data = pd.read_csv('./input_data/least_change_grid_non1_edge_lengths.csv', converters={"Edge": ast.literal_eval})
-    edge_data_dict = dict(zip(edge_data['Edge'], edge_data['perim']))
-    
-    base_map = 'BasePlan'
-    num_districts = 4
-    tot_pop = 'TOTPOP'
-    area = 'Area'
-    incumbent = 'Incumbent'
-   
-    for attribute in graph_data.columns:
-        attribute_dict = {x:attribute for x,attribute in zip(list(graph_data['Node']),list(graph_data[attribute]))}
-        for key in attribute_dict.keys():
-            G.nodes[key][attribute] = attribute_dict[key]
-
-    for edge in G.edges():
-        G.edges[edge]['shared_perim'] = 1 if edge not in edge_data_dict.keys() else edge_data_dict[edge]
-    
-    orig_assign_dict = {node: G.nodes[node][base_map] for node in G.nodes}
-    total_population = graph_data[tot_pop].sum()
-    
-    my_updaters = {
-    "population": updaters.Tally(tot_pop, alias = "population"),
-    "incumbents": updaters.Tally(incumbent, alias = "incumbents"),
-    "cut_edges": cut_edges,
-    "num_cut_edges": cut_length,
-    "max_pop_dev": max_pop_dev,
-    "perc_people_change": partial(perc_people_change, total_pop = total_population, tot_pop = tot_pop, orig_assign_dict = orig_assign_dict),
-    "perc_area_change": partial(perc_area_change, area = area, orig_assign_dict = orig_assign_dict),
-    "perc_precinct_change": partial(perc_precinct_change,orig_assign_dict = orig_assign_dict),
-    "perc_incum_precinct_match_change": perc_incum_precinct_match_change,
-    "perc_incum_people_match_change": partial(perc_incum_people_match_change, total_pop = total_population, tot_pop = tot_pop),
-    "perc_precinct_pair_change": partial(perc_precinct_pair_change,orig_assign_dict = orig_assign_dict),
-    "perim_change_sym_length": partial(perimeter_change,  orig_assign_dict = orig_assign_dict, length = True, reference = 'symmetric'),
-    "perim_change_sym_cut_edges": partial(perimeter_change,  orig_assign_dict = orig_assign_dict, length = False, reference = 'symmetric'), 
-    "FM_index": partial(FM_index, orig_assign_dict = orig_assign_dict)
-    }
-
-    base_partition = GeographicPartition(graph = G, assignment = base_map, updaters = my_updaters)
-    my_updaters.update({"variation_of_info": partial(variation_of_info, total_pop = total_population, tot_pop = tot_pop, base_partition = base_partition, num_districts = num_districts)})
-    results_df = pd.DataFrame(columns = ['Metric'], data = ['Max Pop Dev', 'Num Cut Edges', 'People Change', 'Area Change', 'Precinct Change',   'Perimeter Change (Common Refinement)', 'Perimeter Change (Symmetric Length)', 'Perimeter Change (Symmetric Cut Edges)', 'Incumbent-precinct pair change', 'Incumbent-people pair change', 'Precinct pair change','Fowlkes-Mallows Index' , 'Variation of info'])
-
-    for map_name in ['Plan1', 'Plan2', 'Plan3', 'Plan4']:
-        print("Grid Processing:", map_name)
-        my_updaters.update({"perim_comm_refine_change": partial(perim_common_refine_change, map_name = map_name, state_gdf = graph_data, graph = G, base_map = base_map , node_label = 'Node', base_partition = base_partition)})
-        compare_partition = GeographicPartition(graph = G, assignment = map_name, updaters = my_updaters) 
-        results_df[map_name] = [compare_partition["max_pop_dev"],compare_partition['num_cut_edges'], compare_partition["perc_people_change"],compare_partition["perc_area_change"], compare_partition["perc_precinct_change"], compare_partition["perim_comm_refine_change"], compare_partition["perim_change_sym_length"],  compare_partition["perim_change_sym_cut_edges"], compare_partition["perc_incum_precinct_match_change"], compare_partition["perc_incum_people_match_change"], compare_partition["perc_precinct_pair_change"],compare_partition["FM_index"], compare_partition["variation_of_info"]] 
-    
-        
-        results_df.round(4).to_csv(outdir+'least_change_sample_grid_plan_scores.csv', index = False)
-
-
 outdir = './least_change_outputs/'
 os.makedirs(os.path.dirname(outdir), exist_ok=True)
+
 grid_plan_report(outdir)
 MN_plan_report(outdir)
-#WI_plan_report(outdir)
+WI_plan_report(outdir)
